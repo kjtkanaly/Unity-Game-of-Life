@@ -1,0 +1,38 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct Cell
+{
+    float2 Position;
+    float CurrentStatus;
+    float PreviousStatus;
+    float FilterValue;
+};
+
+RWStructuredBuffer<Cell> cellMap;
+
+int width;
+int height;
+
+
+[numthreads(16, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+
+    cellMap[id.x].PreviousStatus = cellMap[id.x].CurrentStatus;
+
+}
+
+
+// Notes:
+// From 2D to 1D:
+// index = x + (y * width)
+// -or-
+// index = y + (x * height)
+
+// From 1D to 2D:
+// x = index % width
+// y = index / width
+// -or-
+// x = index / height
+// y = index % height

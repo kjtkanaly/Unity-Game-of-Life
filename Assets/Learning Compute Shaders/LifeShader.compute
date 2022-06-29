@@ -1,0 +1,110 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct Cell
+{
+    float2 Pos;
+    float4 Value;
+};
+
+//RWStructuredBuffer<Cell> cellMap;
+RWTexture2D<float4> CellMapTexture;
+
+int width;
+int height;
+int stageOfLife;
+
+float rand(uint state)
+{
+    state ^= 2747636419u;
+    state *= 2654435769u;
+    state ^= state >> 16;
+    state *= 2654435769u;
+    state ^= state >> 16;
+    state *= 2654435769u;
+    return state;
+}
+
+[numthreads(32,1,1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    //Cell cell = cellMap[id.x];
+
+    // Plant the seed for Life
+    if (stageOfLife == 0)
+    {
+        uint noiseValue = rand(id.y * width + id.x);
+
+        if ((noiseValue / 4294967295.0) > 0.5)
+        {
+            //cells[id.x].color = (float4(noiseValue, noiseValue, noiseValue, 1.0));
+            CellMapTexture[float2(id.x % width, id.x / width)] = 1;
+            //cell.Value = float4(1.0,1.0,1.0,1.0);
+        }
+        else
+        {
+            //cells[id.x].color = (float4(0.0, 0.0, 0.0, 1.0));
+            CellMapTexture[float2(id.x % width, id.x / width)] = 0;
+            //cell.Value = float4(0.0,0.0,0.0,0.0);
+        }
+    }
+
+    // Iterating Generations
+    else if (stageOfLife == 1)
+    {
+        //// Checking if the current pixel has life and if it can continue
+        //if (cell.Value == 1.0)
+        //{
+        //    for (int offsetX = -1; offsetX <= 1; offsetX++)
+        //    {
+        //        for (int offsetY = -1; offsetY <= 1; offsetY++)
+        //        {
+        //            if (previousTexture.GetPixel(i + bufferX, j + bufferY).r == 1f)
+        //            {
+        //                lifeCheck += 1;
+        //            }
+        //        }
+        //    }
+
+        //    // Solitude Check (If a "living" cell is only surronded by <= 1 "living" neighbor it dies)
+        //    if (lifeCheck <= 2)
+        //    {
+        //        newTexture.SetPixel(i, j, new Color(previousTexture.GetPixel(i, j).r - lifeTrailFadeRate, previousTexture.GetPixel(i, j).g - lifeTrailFadeRate, previousTexture.GetPixel(i, j).b - lifeTrailFadeRate));
+        //    }
+
+        //    // Overpopulation Check (If a "living" cell is surroned by >= 4 "living" neighbors it dies)
+        //    else if (lifeCheck >= 5)
+        //    {
+        //        newTexture.SetPixel(i, j, new Color(previousTexture.GetPixel(i, j).r - lifeTrailFadeRate, previousTexture.GetPixel(i, j).g - lifeTrailFadeRate, previousTexture.GetPixel(i, j).b - lifeTrailFadeRate));
+        //    }
+
+        //    // Ideal Conditions Check (If a "living" cell is surronded by 2 or 3 "living" neighbors it lives
+        //    else
+        //    {
+        //        newTexture.SetPixel(i, j, new Color(1f, 1f, 1f));
+        //    }
+        //}
+
+
+       
+    }
+}
+
+
+
+
+
+
+
+// Notes:
+// From 2D to 1D:
+// index = x + (y * width)
+// -or-
+// index = y + (x * height)
+
+// From 1D to 2D:
+// x = index % width
+// y = index / width
+// -or-
+// x = index / height
+// y = index % height

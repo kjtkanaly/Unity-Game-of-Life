@@ -1,0 +1,95 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct Cell
+{
+    float2 Position;
+    float CurrentStatus;
+    float PreviousStatus;
+    float FilterValue;
+};
+
+RWStructuredBuffer<Cell> cellMap;
+
+RWTexture2D<float4> renderTexture;
+
+int width;
+int height;
+float lifeTrailFadeRate;
+bool applyFilter;
+
+[numthreads(32,32,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    ////////////////////////////////////////////////
+    // Mean Filter
+
+    // float4 originalValue = CellMapTexture[id.xy];
+
+    /*if (id.x >= 0 + 1 && id.y >= 0 + 1 && id.x <= width - 2 && id.y <= height - 2)
+    {
+        CellMapTextureFilter[float2(id.x, id.y)] = CellMapTexture[float2(id.x, id.y)];
+    }*/
+
+    int index = id.x + (id.y * width);
+    
+    if (id.x >= 0 + 1 && id.y >= 0 + 1 && id.x <= width - 2 && id.y <= height - 2)
+    {
+        if (cellMap[index].CurrentStatus < 1 && cellMap[index].CurrentStatus > 0)
+        {
+            cellMap[index].CurrentStatus = cellMap[index].CurrentStatus - lifeTrailFadeRate;
+        }
+
+        if (applyFilter == true)
+        {
+
+            float filterSum;
+            filterSum = 0;
+
+            for (int offsetX = -1; offsetX <= 1; offsetX++)
+            {
+                for (int offsetY = -1; offsetY <= 1; offsetY++)
+                {
+                    int sampleIndex = (id.x + offsetX) + ((id.y + offsetY) * width);
+                    filterSum += cellMap[sampleIndex].CurrentStatus;
+                }
+            }
+
+            float filterOutput = filterSum / 9;
+
+            renderTexture[float2(id.x, id.y)] = filterOutput;
+        }
+        else
+        {
+            renderTexture[float2(id.x, id.y)] = cellMap[index].CurrentStatus;
+        }
+         
+        cellMap[index].PreviousStatus = cellMap[index].CurrentStatus;
+
+    }
+}
+
+
+
+
+
+/*
+float4 sum = 0;
+for (int offsetX = -1; offsetX <= 1; offsetX++)
+{
+    for (int offsetY = -1; offsetY <= 1; offsetY++)
+    {
+        int sampleX = id.x + offsetX;
+        int sampleY = id.y + offsetY;
+
+        if (sampleX >= 0 + 1 && sampleY >= 0 + 1 && sampleX <= width - 2 && sampleY <= height - 2)
+        {
+            sum += updatedTexture[int2(sampleX, sampleY)];
+        }
+    }
+}
+
+float4 filterOutput = sum / 9;
+
+renderTexture[int2(id.x, id.y)] = filterOutput;
+*/

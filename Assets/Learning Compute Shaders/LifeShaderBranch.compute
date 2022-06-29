@@ -1,0 +1,64 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct Cell
+{
+    float2 Position;
+    float CurrentStatus;
+    float PreviousStatus;
+    float FilterValue;
+};
+
+RWStructuredBuffer<Cell> cellMap;
+
+RWTexture2D<float4> renderTexture;
+
+int width;
+int height;
+
+float rand(uint state)
+{
+    state ^= 2747636419u;
+    state *= 2654435769u;
+    state ^= state >> 16;
+    state *= 2654435769u;
+    state ^= state >> 16;
+    state *= 2654435769u;
+    return state;
+}
+
+[numthreads(16, 16, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    int index = id.x + (id.y * width);
+
+    if (id.x >= 0 + 1 && id.y >= 0 + 1 && id.x <= width - 2 && id.y <= height - 2)
+    {
+        renderTexture[float2(id.x, id.y)] = cellMap[index].CurrentStatus;
+
+    }
+
+}
+
+/*
+// Test Logic
+if (id.x >= 0 + 1 && id.y >= 0 + 1 && id.x <= width - 2 && id.y <= height - 2)
+{
+    CellMapTexture[float2(id.x, id.y)] = 1;
+}
+*/
+
+
+
+// Notes:
+// From 2D to 1D:
+// index = x + (y * width)
+// -or-
+// index = y + (x * height)
+
+// From 1D to 2D:
+// x = index % width
+// y = index / width
+// -or-
+// x = index / height
+// y = index % height

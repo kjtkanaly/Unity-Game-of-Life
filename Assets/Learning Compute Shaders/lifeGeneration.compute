@@ -1,0 +1,126 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+
+struct Cell
+{
+    float2 Position;
+    float CurrentStatus;
+    float PreviousStatus;
+    float FilterValue;
+};
+
+RWStructuredBuffer<Cell> cellMap;
+
+//RWTexture2D<float4> renderTexture;
+
+int width;
+int height;
+float lifeTrailFadeRate;
+
+[numthreads(32, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+
+    int x = id.x % width;
+    int y = id.x / width;
+
+    if (x >= 0 + 1 && y >= 0 + 1 && x <= width - 2 && y <= height - 2 )
+    {
+        //renderTexture[int2(id.x, id.y)] = renderTexture[int2(id.x, id.y)] - lifeTrailFadeRate;
+
+        //int index = id.x + (id.y * width);
+        //Cell cell = cellMap[index];
+
+        //renderTexture[float2(id.x, id.y)] = (cellMap[index].CurrentStatus * -1) + 1;
+        //cellMap[index].CurrentStatus = (cellMap[index].CurrentStatus * -1) + 1;
+
+        int lifeCheck = 0;
+
+        // Checking if the current pixel has life and if it can continue
+        if (cellMap[id.x].PreviousStatus == 1)
+        {
+            for (int offsetX = -1; offsetX <= 1; offsetX++)
+            {
+                for (int offsetY = -1; offsetY <= 1; offsetY++)
+                {
+                    int indexOffset = (x + offsetX) + ((y + offsetY) * width);
+                    if (cellMap[indexOffset].PreviousStatus == 1)
+                    {
+                        lifeCheck += 1;
+                    }
+                }
+            }
+
+            // Solitude Check (If a "living" cell is only surronded by <= 1 "living" neighbor it dies)
+            if (lifeCheck <= 2)
+            {
+                //renderTexture[int2(id.x, id.y)] = 1 - lifeTrailFadeRate;
+                cellMap[id.x].CurrentStatus = 1 - lifeTrailFadeRate;
+            }
+
+            // Overpopulation Check (If a "living" cell is surroned by >= 4 "living" neighbors it dies)
+            else if (lifeCheck >= 5)
+            {
+                //renderTexture[int2(id.x, id.y)] = 1 - lifeTrailFadeRate;
+                cellMap[id.x].CurrentStatus = 1 - lifeTrailFadeRate;
+            }
+
+            // Ideal Conditions Check (If a "living" cell is surronded by 2 or 3 "living" neighbors it lives
+            else
+            {
+                //renderTexture[int2(id.x, id.y)] = 1;
+                cellMap[id.x].CurrentStatus = 1;
+            }
+        }
+
+        else
+        {
+
+            for (int offsetX = -1; offsetX <= 1; offsetX++)
+            {
+                for (int offsetY = -1; offsetY <= 1; offsetY++)
+                {
+                    int indexOffset = (x + offsetX) + ((y + offsetY) * width);
+                    if (cellMap[indexOffset].PreviousStatus == 1)
+                    {
+                        lifeCheck += 1;
+                    }
+                }
+            }
+
+            // Ideal Living Check (If a "dead" cell is surronded by 3 "living" neighbors it lives
+            if (lifeCheck == 3)
+            {
+                //renderTexture[int2(id.x, id.y)] = 1;
+                cellMap[id.x].CurrentStatus = 1;
+            }
+
+        }
+
+    }
+
+}
+
+/*
+// Test Logic
+if (id.x >= 0 + 1 && id.y >= 0 + 1 && id.x <= width - 2 && id.y <= height - 2)
+{
+    CellMapTexture[int2(id.x, id.y)] = 1;
+}
+*/
+
+
+
+// Notes:
+// From 2D to 1D:
+// index = x + (y * width)
+// -or-
+// index = y + (x * height)
+
+// From 1D to 2D:
+// x = index % width
+// y = index / width
+// -or-
+// x = index / height
+// y = index % height
