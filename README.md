@@ -12,5 +12,7 @@
 ## Compute Shaders
 ### Compute shaders are a helpful tool for running simulations in Unity that require a large number of calculations per frame. These shader programs divide the computations in each frame into groups and then pass those them onto the GPU to be computed in parrallel.
 
+---
+## Demo
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/o3j11Yw2E3A/0.jpg)](https://www.youtube.com/watch?v=o3j11Yw2E3A)
